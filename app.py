@@ -1,6 +1,7 @@
 import streamlit as st
 import replicate
 import os
+import language_tool_python
 
 # App title
 st.set_page_config(page_title="Socialize")
@@ -37,7 +38,7 @@ os.environ['REPLICATE_API_TOKEN'] = replicate_api
 
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": ""}]
+    st.session_state.messages = [{"role": "assistant", "content": "welcome to the socialize blog ChatBot how may I help you?"}]
 
 # Display or clear chat messages
 for message in st.session_state.messages:
@@ -50,22 +51,34 @@ st.sidebar.button('Clear Chat History', on_click=clear_chat_history)
 
 # Function for generating LLaMA2 response
 def generate_llama2_response(prompt_input):
-    string_dialogue = "You are a helpful assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
+    string_dialogue = "You are a helpful and kind assistant. You do not respond as 'User' or pretend to be 'User'. You only respond once as 'Assistant'."
     for dict_message in st.session_state.messages:
         if dict_message["role"] == "user":
             string_dialogue += "User: " + dict_message["content"] + "\n\n"
         else:
             string_dialogue += "Assistant: " + dict_message["content"] + "\n\n"
     output = replicate.run(llm, 
-                           input={"prompt": f"{string_dialogue} {prompt_input} Assistant: ",
+                           input={"prompt": f"{string_dialogue} {prompt_input} Assistant:",
                                   "temperature":temperature, "top_p":top_p, "max_length":max_length, "repetition_penalty":1})
     return output
 
+# Function to correct the user's input
+def corrected_input(user_input):
+    """
+    Takes user input, corrects the grammar and spelling, 
+    and returns the corrected version.
+    """
+    tool = language_tool_python.LanguageTool('en-US')  # Initialize the language tool for English
+    matches = tool.check(user_input)  # Check for grammar and spelling mistakes
+    corrected_text = language_tool_python.utils.correct(user_input, matches)  # Apply corrections
+    return corrected_text  # Return the corrected text
+
 # User-provided prompt
 if prompt := st.chat_input(disabled=not replicate_api):
+    corrected_prompt = corrected_input(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
-        st.write(prompt)
+        st.write(corrected_prompt)
 
 # Generate a new response if last message is not from assistant
 if st.session_state.messages[-1]["role"] != "assistant":
