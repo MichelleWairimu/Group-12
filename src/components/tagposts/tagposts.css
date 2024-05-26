@@ -1,0 +1,16 @@
+.tagPosts {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.taggedPosts {
+    color: black;
+    margin-bottom: 3rem;
+}
+
+.noPosts {
+    color: rgb(109, 125, 168);
+    margin-top: 5rem;
+}
